@@ -142,3 +142,40 @@ def eliminarProducto(request, id):
 
         html_template = loader.get_template('home/index.html')
         return HttpResponse(html_template.render(context, request))
+
+def indexCliente(request):
+
+    context = {}
+
+    url = 'http://host.docker.internal:8069'
+    db = 'anime_store'
+    username = 'admin'
+    password = '1234'
+
+    common = xmlrpc.client.ServerProxy('{}/xmlrpc/2/common'.format(url))
+    
+    uid = common.authenticate(db, username, password, {})
+
+    models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
+    products = models.execute_kw(db, uid, password, 'product.product', 'search_read', [], {'fields': []})
+
+    if uid:
+        print('Se conectó correctamente')
+    else:
+        print('No se pudo conectar')
+    
+    try:
+        html_template = loader.get_template('home/index-cliente.html')
+
+        context['products'] = products
+
+        return HttpResponse(html_template.render(context, request))
+
+    except template.TemplateDoesNotExist:
+
+        html_template = loader.get_template('home/page-404.html')
+        return HttpResponse(html_template.render(context, request))
+
+    except:
+        html_template = loader.get_template('home/page-500.html')
+        return HttpResponse(html_template.render(context, request))
