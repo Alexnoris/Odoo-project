@@ -31,7 +31,7 @@
                   <td>{{ product.list_price }}</td>
                   <td><img src="http://localhost:8069/web/image?model=product.template&id={{product.id}}&field=image_128" alt="{{ product.name }}" width="100"></td>
                   <td>
-                    <button type="button" class="btn btn-warning btn-editar btnEditarProducto" data-bs-toggle="modal" data-bs-target="#modalProductos" data-id="{{ product.id }}">  <i class="fa-solid fa-pen"></i> Editar</button>
+                    <button type="button" class="btn btn-warning btn-editar btnEditarProducto" data-bs-toggle="modal" data-bs-target="#modalProductos" data-id="{{ product.id }}" onclick="editarProducto('{{product.id}}')">  <i class="fa-solid fa-pen"></i> Editar</button>
                     <button type="button" class="btn btn-danger btn-borrar btnBorrarProducto" data-id="{{ product.id }}" onclick="borrarProducto('{{product.id}}')">  <i class="fa-solid fa-trash"></i> Borrar</button>
                   </td>
                 </tr>
@@ -47,7 +47,7 @@
         <h1 class="modal-title fs-5" id="modalLbl"> Agregar producto</h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form action="{% url 'guardar_producto' %}" method="post" id="formProducto">
+      <form action="{% url 'guardar_producto' %}" method="post" id="formProducto" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="modal-body">
           <!-- <div class="mb-3"> -->
@@ -91,34 +91,6 @@
       $("#btnAgregarProducto").on('click shown.bs.modal', function (){
         $("#modalLbl").text('Agregar producto');
       });
-
-      $(".btnEditarProducto").on('click shown.bs.modal', function (){
-        $("#modalLbl").text('Editar producto');
-
-        var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
-        const id = $(this).attr("data-id");
-
-        $.ajax({
-          url: '/editar-producto/' + id + '/',
-          method: 'GET',
-          success: function(response) {
-            $('#formProducto #id').val(response.id);
-            $('#formProducto #nombre').val(response.display_name);
-            $('#formProducto #descripcion').val(response.description);
-            $('#formProducto #precio').val(response.list_price);
-          },
-          beforeSend: function(xhr, settings) {
-            xhr.setRequestHeader("X-CSRFToken", csrftoken);
-          },
-          error: function(xhr, status, error) {
-            console.log(error);
-          }
-        });
-      });
-
-      // $('#modalProductos').on('shown.bs.modal', function() {
-      //   limpiarObjetos();
-      // });
       
       $('#modalProductos').on('hidden.bs.modal', function() {
         limpiarObjetos();
@@ -128,6 +100,29 @@
 
     function limpiarObjetos() {
       $("#formProducto")[0].reset();
+    }
+
+   function editarProducto(id) {
+      $("#modalLbl").text('Editar producto');
+
+      var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
+
+      $.ajax({
+        url: '/editar-producto/' + id + '/',
+        method: 'GET',
+        success: function(response) {
+          $('#formProducto #id').val(response.id);
+          $('#formProducto #nombre').val(response.display_name);
+          $('#formProducto #descripcion').val(response.description);
+          $('#formProducto #precio').val(response.list_price);
+        },
+        beforeSend: function(xhr, settings) {
+          xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        },
+        error: function(xhr, status, error) {
+          console.log(error);
+        }
+      });
     }
 
     function borrarProducto(id){
