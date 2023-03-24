@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" itemscope itemtype="http://schema.org/WebPage">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+
+  <title>
+    Anime Store
+  </title>
+
+  <link rel="shortcut icon" type="image/png" href="https://i.ebayimg.com/images/g/z48AAOSwFxJibUAM/s-l500.png">
+
+  <link rel="stylesheet" type="text/css" href="{% static '/css/style.css' %}"/>
+  <script src="https://kit.fontawesome.com/6e8e3a2b99.js" crossorigin="anonymous"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+  <!-- Specific Page CSS goes HERE  -->
+  {% block stylesheets %}
+  
+  {% endblock stylesheets %}
+
+</head>
+
+<body>
+
+  {% block content %}{% endblock content %}  
+
+
+  {% include 'includes/scripts.html' %} 
+
+   <!-- Specific Page JS goes HERE  -->
+   {% block javascripts %}{% endblock javascripts %}
+
+</body>
+</html>
