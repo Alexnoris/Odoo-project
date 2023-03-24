@@ -1,2 +1,3 @@
 app\__pycache__
 app\migrations
+.DS_Store
