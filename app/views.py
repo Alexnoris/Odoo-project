@@ -1,4 +1,4 @@
-import json
+import json, base64, io
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.template import loader
@@ -50,7 +50,7 @@ def guardarProducto(request):
         nombre = request.POST['nombre']
         descripcion = request.POST['descripcion']
         precio = request.POST['precio']
-        # imagen = request.FILES['imagen']
+        imagen = request.FILES['imagen']
 
         url = 'http://host.docker.internal:8069'
         db = 'anime_store'
@@ -62,18 +62,25 @@ def guardarProducto(request):
         models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
         if(id == ""):
-            models.execute_kw(db, uid, password, 'product.product', 'create', [{
+            inserted_id = models.execute_kw(db, uid, password, 'product.product', 'create', [{
                 'name': nombre,
                 'description': descripcion,
                 'list_price': float(precio),
             }])
 
-            # id_insert = models.execute_kw(db, uid, password, 'product', 'name_get', [[id]])
-            # models.execute_kw(db, uid, password, 'ir.attachment', 'create', [{
-            #     'res_model': nombre,
-            #     'name': descripcion,
-            #     'res_id': float(precio),
-            # }])
+            datos = base64.b64encode(imagen.read()).decode('utf-8')
+
+            models.execute_kw(db, uid, password, 'ir.attachment', 'create', [{
+                'name': 'image_128',
+                'res_model': 'product.template',
+                'res_id': int(inserted_id),
+                'res_field': 'image_128',
+                'type' : 'binary',
+                'mimetype' : 'image/png',
+                'store_fname' : imagen.name,
+                'url': datos,                            
+                'datas': datos
+            }])
 
         else:
              models.execute_kw(db, uid, password,'product.product', 'write',[[int(id)], {
