@@ -224,7 +224,7 @@ def detalleProducto(request, id):
 
     context = {}
 
-    url = 'http://host.docker.internal:8069/'
+    url = 'http://host.docker.internal:8069'
     db = 'anime_store'
     username = 'admin'
     password = '1234'
