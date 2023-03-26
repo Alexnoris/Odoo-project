@@ -22,6 +22,10 @@ def index(request):
     models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
     products = models.execute_kw(db, uid, password, 'product.product', 'search_read', [], {'fields': []})
 
+    inventory = models.execute_kw(db, uid, password, 'product.product', 'fields_get', [], {})
+
+    print(inventory)
+
     if uid:
         print('Se conectó correctamente')
     else:
@@ -50,7 +54,7 @@ def guardarProducto(request):
         nombre = request.POST['nombre']
         descripcion = request.POST['descripcion']
         precio = request.POST['precio']
-        imagen = request.FILES['imagen']
+        stock = request.POST['stock']
 
         url = 'http://host.docker.internal:8069'
         db = 'anime_store'
@@ -62,14 +66,18 @@ def guardarProducto(request):
         models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
         if(id == ""):
+            imagen = request.FILES['imagen']
+            # Modelo productos
             inserted_id = models.execute_kw(db, uid, password, 'product.product', 'create', [{
                 'name': nombre,
                 'description': descripcion,
                 'list_price': float(precio),
-            }])
+                'qty_available': float(stock),
+            }])            
 
             datos = base64.b64encode(imagen.read()).decode('utf-8')
 
+            # Modelo imagen
             models.execute_kw(db, uid, password, 'ir.attachment', 'create', [{
                 'name': 'image_128',
                 'res_model': 'product.template',
@@ -78,18 +86,54 @@ def guardarProducto(request):
                 'type' : 'binary',
                 'mimetype' : 'image/png',
                 'store_fname' : imagen.name,
-                'url': datos,                            
+                'url': datos,                      
+                'public': True,                      
                 'datas': datos
             }])
 
-        else:
-             models.execute_kw(db, uid, password,'product.product', 'write',[[int(id)], {
-                 'name': nombre, 
-                 'description': descripcion, 
-                 'list_price': float(precio)
-            }])
+            # Crea un movimiento de inventario
+            # move_id = models.execute_kw(db, uid, password, 'stock.move', 'create', [{
+            #     'name': nombre,
+            #     'product_id': inserted_id,
+            #     'product_uom_qty': float(stock),
+            #     'product_uom': 1,
+            #     'location_id': 8,
+            #     'reference': 'WH/OUT/00001',
+            #     'location_dest_id': 8,
+            #     'state': 'confirmed',
+            # }])
 
-        return redirect('index')
+            # move = models.execute_kw(db, uid, password, 'stock.move', 'search_read', [[['id', '=', move_id]]], {'fields': ['picking_id']})
+
+            # line_id = models.execute_kw(db, uid, password, 'stock.move.line', 'create', [{
+            #     'move_id': move_id,
+            #     'product_id': inserted_id,
+            #     'product_uom_qty': float(stock),
+            #     'product_uom_id': 1,
+            #     'location_id': 8,
+            #     'location_dest_id': 8,
+            #     'lot_id': 8,  # ID del lote a asociar con esta línea de movimiento
+            # }])
+
+            # models.execute_kw(db, uid, password, 'stock.move.line', 'write', [[line_id], {'qty_done': float(stock)}])
+
+        else:
+            # Modelo productos
+            inserted_id = models.execute_kw(db, uid, password,'product.product', 'write',[[int(id)], {
+                'name': nombre, 
+                'description': descripcion, 
+                'list_price': float(precio)
+            }])
+            # Modelo para el stock
+            # models.execute_kw(db, uid, password, 'stock.move', 'write', [[['product_id', '=', inserted_id]]], {
+            #     'quantity': stock,
+            #     'available_quantity': stock,
+            #     'inventory_quantity': stock,
+            # })
+            # fields = models.execute_kw(db, uid, password, 'stock.quant', 'fields_get', [], {})
+            # print(fields)
+
+        return redirect('adminp')
 
     else:
         context = {}
@@ -110,9 +154,11 @@ def editarProducto(request, id):
     uid = common.authenticate(db, username, password, {})
     models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
     
-    productos = models.execute_kw(db, uid, password, 'product.product', 'search_read', [[['id', '=', int(id)]]], {'fields': ['id','display_name', 'description', 'list_price']})
-
+    productos = models.execute_kw(db, uid, password, 'product.product', 'search_read', [[['id', '=', int(id)]]], {'fields': ['id','display_name', 'description', 'list_price', 'qty_available']})
+    
     productos_json = json.dumps(productos[0])
+
+    print(productos_json)
     
     return HttpResponse(productos_json, content_type='application/json')
 
@@ -135,7 +181,7 @@ def eliminarProducto(request, id):
         
         models.execute_kw(db, uid, password, 'product.product', 'unlink', [[id]])
 
-        return redirect('index')
+        return redirect('adminp')
 
     else:
         context = {}

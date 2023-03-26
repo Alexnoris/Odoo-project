@@ -11,13 +11,14 @@
       <!-- <button type="button" disabled class="btn btn-warning col-2 ms-2" data-bs-toggle="modal" data-bs-target="#modalEditP"> <i class="fa-solid fa-pen"></i> Editar producto </button>   -->
       <!-- <button type="button" disabled class="btn btn-danger col-2 ms-2" data-bs-toggle="modal" data-bs-target="#modalEditP"> <i class="fa-solid fa-trash"></i> Eliminar producto </button>   -->
     </div>
-    <table class="table">
+    <table class="table table-dark table-hover">
         <thead>
             <tr>
               <!-- <th>ID</th> -->
               <th>Nombre</th>
               <th>Descripción</th>
               <th>Precio</th>
+              <th>Stock</th>
               <th>Imagen</th>
               <th>Acciones</th>
             </tr>
@@ -29,6 +30,7 @@
                   <td>{{ product.display_name }}</td>
                   <td>{{ product.description }}</td>
                   <td>{{ product.list_price }}</td>
+                  <td>{{ product.qty_available }}</td>
                   <td><img src="http://localhost:8069/web/image?model=product.template&id={{product.id}}&field=image_128" alt="{{ product.name }}" width="100"></td>
                   <td>
                     <button type="button" class="btn btn-warning btn-editar btnEditarProducto" data-bs-toggle="modal" data-bs-target="#modalProductos" data-id="{{ product.id }}" onclick="editarProducto('{{product.id}}')">  <i class="fa-solid fa-pen"></i> Editar</button>
@@ -64,11 +66,15 @@
             <div class="mb-3">
                 <label for="precio" class="form-label">Precio:</label>
                 <input type="number" class="form-control" id="precio" name="precio" required>
-            </div>            
+            </div>
             <div class="mb-3">
-                <label for="imagen" class="form-label">Imagen:</label>
-                <input type="file" name="imagen" id="imagen" onchange="previewImage(event)">
-                <img id="preview" src="#" alt="Preview" style="display:none">
+              <label for="stock" class="form-label">Stock:</label>
+              <input type="number" class="form-control" id="stock" name="stock" required>
+            </div>    
+            <div class="mb-3">
+                <label for="imagen" class="form-label" id="lblImagen">Imagen:</label>
+                <input type="file" name="imagen" id="imagen">
+                <!-- <img id="preview" src="#" alt="Preview" style="display:none"> -->
             </div>
         </div>
         <div class="modal-footer">
@@ -104,6 +110,9 @@
 
    function editarProducto(id) {
       $("#modalLbl").text('Editar producto');
+
+      $('#formProducto #imagen').attr('disabled', true).hide();
+      $('#formProducto #lblImagen').hide();
 
       var csrftoken = jQuery("[name=csrfmiddlewaretoken]").val();
 
