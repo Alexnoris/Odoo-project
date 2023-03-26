@@ -1,0 +1,52 @@
+.producto-imagen {
+    border-radius: 5px;
+    box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+    max-width: 100%;
+  }
+
+  .producto-titulo {
+    color: #333;
+    font-size: 2rem;
+  }
+
+  .producto-precio {
+    color: #333;
+    font-size: 1.5rem;
+  }
+
+  .producto-descripcion {
+    color: #666;
+    font-size: 1.2rem;
+    line-height: 1.5;
+  }
+
+  .producto-stock {
+    color: #333;
+    font-size: 1.2rem;
+  }
+
+  .agregar-carrito {
+    background-color: #009688;
+    border-color: #009688;
+    color: #fff;
+    font-weight: bold;
+  }
+
+  .agregar-carrito:hover {
+    background-color: #008080;
+    border-color: #008080;
+    color: #fff;
+  }
+
+  .btn-regresar {
+    background-color: #009688;
+    border-color: #009688;
+    color: #fff;
+    font-weight: bold;
+  }
+
+  .btn-regresar:hover {
+    background-color: #008080;
+    border-color: #008080;
+    color: #fff;
+  }

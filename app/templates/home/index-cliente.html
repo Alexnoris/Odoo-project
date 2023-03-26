@@ -1,0 +1,32 @@
+{% load static %}
+{% include 'includes/base.html' %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <div>
+        <h1>Bienvenido a Anime Store</h1>
+    </div>
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4">
+            <div class="card mb-4 box-shadow">
+                <img class="card-img-top" src="http://localhost:8069/web/image?model=product.template&id=%7B%7Bproduct.id%7D%7D&field=image_128" alt="{{ product.name }}" height="200" width="200">
+                <div class="card-body">
+                    <h4 class="card-title">{{ product.display_name }}</h4>
+                    <p class="card-text">{{ product.description }}</p>
+                    <p class="card-text">Precio: {{ product.list_price }}</p>
+                    <p class="card-text">Stock: {{ product.qty_available }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="window.location.href='/product/{{ product.id }}'">Ver detalles</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

@@ -21,11 +21,7 @@ def index(request):
 
     models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
     products = models.execute_kw(db, uid, password, 'product.product', 'search_read', [], {'fields': []})
-
-    inventory = models.execute_kw(db, uid, password, 'product.product', 'fields_get', [], {})
-
-    print(inventory)
-
+    
     if uid:
         print('Se conectó correctamente')
     else:
@@ -157,8 +153,6 @@ def editarProducto(request, id):
     productos = models.execute_kw(db, uid, password, 'product.product', 'search_read', [[['id', '=', int(id)]]], {'fields': ['id','display_name', 'description', 'list_price', 'qty_available']})
     
     productos_json = json.dumps(productos[0])
-
-    print(productos_json)
     
     return HttpResponse(productos_json, content_type='application/json')
 
@@ -214,6 +208,37 @@ def indexCliente(request):
         html_template = loader.get_template('home/index-cliente.html')
 
         context['products'] = products
+
+        return HttpResponse(html_template.render(context, request))
+
+    except template.TemplateDoesNotExist:
+
+        html_template = loader.get_template('home/page-404.html')
+        return HttpResponse(html_template.render(context, request))
+
+    except:
+        html_template = loader.get_template('home/page-500.html')
+        return HttpResponse(html_template.render(context, request))
+
+def detalleProducto(request, id):
+
+    context = {}
+
+    url = 'http://host.docker.internal:8069/'
+    db = 'anime_store'
+    username = 'admin'
+    password = '1234'
+
+    common = xmlrpc.client.ServerProxy('{}/xmlrpc/2/common'.format(url))
+    uid = common.authenticate(db, username, password, {})
+    models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
+
+    productos = models.execute_kw(db, uid, password, 'product.product', 'search_read', [[['id', '=', int(id)]]], {'fields': ['id','display_name', 'description', 'list_price', 'qty_available']})
+
+    try:
+        html_template = loader.get_template('home/detalle-producto.html')
+
+        context['product'] = productos[0]
 
         return HttpResponse(html_template.render(context, request))
 
