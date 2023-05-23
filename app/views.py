@@ -5,6 +5,9 @@ from django.template import loader
 from django import template
 import xmlrpc.client
 
+import requests
+from .models import StockQuant
+
 
 def index(request):
 
@@ -28,7 +31,8 @@ def index(request):
         print('No se pudo conectar')
     
     try:
-        html_template = loader.get_template('home/index.html')
+        html_template = loader.get_template('home/index-prestashop.html')
+        # html_template = loader.get_template('home/index.html')
 
         context['products'] = products
 
@@ -52,10 +56,12 @@ def guardarProducto(request):
         precio = request.POST['precio']
         stock = request.POST['stock']
 
+        # Moficar product template tambien para insertar el onHand
+
         url = 'http://host.docker.internal:8069'
         db = 'anime_store'
         username = 'admin'
-        password = '1234'
+        password = '03b30084b45b3b8dcaffce3835b7ad31e902b49e'
 
         common = xmlrpc.client.ServerProxy('{}/xmlrpc/2/common'.format(url))
         uid = common.authenticate(db, username, password, {})
@@ -87,31 +93,9 @@ def guardarProducto(request):
                 'datas': datos
             }])
 
-            # Crea un movimiento de inventario
-            # move_id = models.execute_kw(db, uid, password, 'stock.move', 'create', [{
-            #     'name': nombre,
-            #     'product_id': inserted_id,
-            #     'product_uom_qty': float(stock),
-            #     'product_uom': 1,
-            #     'location_id': 8,
-            #     'reference': 'WH/OUT/00001',
-            #     'location_dest_id': 8,
-            #     'state': 'confirmed',
-            # }])
-
-            # move = models.execute_kw(db, uid, password, 'stock.move', 'search_read', [[['id', '=', move_id]]], {'fields': ['picking_id']})
-
-            # line_id = models.execute_kw(db, uid, password, 'stock.move.line', 'create', [{
-            #     'move_id': move_id,
-            #     'product_id': inserted_id,
-            #     'product_uom_qty': float(stock),
-            #     'product_uom_id': 1,
-            #     'location_id': 8,
-            #     'location_dest_id': 8,
-            #     'lot_id': 8,  # ID del lote a asociar con esta línea de movimiento
-            # }])
-
-            # models.execute_kw(db, uid, password, 'stock.move.line', 'write', [[line_id], {'qty_done': float(stock)}])
+            # create_stock_quant(inserted_id, 8, float(stock))
+            stock_quant = StockQuant(product_id=inserted_id, location_id=8,quantity=stock)
+            stock_quant.save()
 
         else:
             # Modelo productos
@@ -120,16 +104,52 @@ def guardarProducto(request):
                 'description': descripcion, 
                 'list_price': float(precio)
             }])
-            # Modelo para el stock
-            # models.execute_kw(db, uid, password, 'stock.move', 'write', [[['product_id', '=', inserted_id]]], {
-            #     'quantity': stock,
-            #     'available_quantity': stock,
-            #     'inventory_quantity': stock,
-            # })
-            # fields = models.execute_kw(db, uid, password, 'stock.quant', 'fields_get', [], {})
-            # print(fields)
 
         return redirect('adminp')
+
+    else:
+        context = {}
+        html_template = loader.get_template('home/index.html')
+        return HttpResponse(html_template.render(context, request))
+    
+def guardarPrestashop(request):
+
+    if request.method == 'POST':
+        id = request.POST['id']
+        nombre = request.POST['nombre']
+        descripcion = request.POST['descripcion']
+        precio = request.POST['precio']
+        stock = request.POST['stock']
+        img = request.POST['imagen']
+
+        secure_key = "2FISCKE65YG6MGT3FVV8BMXH8LQ4BUUD"
+        url = f"http://host.docker.internal:8081/admin7272sw0hk5eyvkzhssy/create-product.php?secure_key={secure_key}"
+
+        product_data = {
+            'ean13': id,
+            'reference': nombre,
+            'name': nombre,
+            'quantity': stock,
+            'description': descripcion,
+            'features': [
+                {"name": "Color", "value": "Grey"},
+                {"name": "Height", "value": "40cm"},
+            ],
+            'price': precio,
+            'image_url': img,
+            'default_category': 1,
+            'categories': [1, 5]
+        }
+
+        response = requests.post(url, data=product_data)
+
+        if response.status_code == 200:
+            return redirect('adminp')
+        else:
+            return HttpResponse("Error al guardar el producto")
+
+
+        # return redirect('adminp')
 
     else:
         context = {}
@@ -160,6 +180,28 @@ def editarProducto(request, id):
     context = {}
     html_template = loader.get_template('home/index.html')
     return HttpResponse(html_template.render(context, request))
+  
+
+def create_stock_quant(product_id, location_id, quantity):
+    url = 'http://host.docker.internal:8069'
+    db = 'anime_store'
+    username = 'admin'
+    password = '1234'
+
+    common = xmlrpc.client.ServerProxy('{}/xmlrpc/2/common'.format(url))
+    uid = common.authenticate(db, username, password, {})
+    models = xmlrpc.client.ServerProxy('{}/xmlrpc/2/object'.format(url))
+
+    stock_quant_data = {
+        'product_id': product_id,
+        'location_id': location_id,
+        'quantity': quantity,
+    }
+    stock_quant_id = models.execute_kw(
+        db, uid, password, 'stock.quant', 'create', [stock_quant_data]
+    )
+
+    return stock_quant_id
 
 def eliminarProducto(request, id):
     if request.method == 'GET':
